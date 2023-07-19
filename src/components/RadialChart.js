@@ -91,6 +91,40 @@ class RadialChart extends React.Component {
         .style("font-size", "20px")
         .style("fill", "black");
     }
+
+    update();
+
+    function update() {
+      field.each(function (d) {
+        this._value = d.percentage;
+      });
+
+      field
+        .select("path.progress")
+        .transition()
+        .duration((d) => (useElasticAnimation ? 1750 : 0)) // Set duration based on useElasticAnimation prop
+        .ease((d) => (useElasticAnimation ? d3.easeBounceOut : d3.easeLinear)) // Set ease based on useElasticAnimation prop
+        .attrTween("d", arcTween);
+
+      field.select("text.completed").text((d, i) => {
+        if (i === 0) {
+          return Math.round((d.percentage / 100) * 600);
+        }
+      });
+
+      setTimeout(update, 2000);
+    }
+
+    function arcTween(d) {
+      const i = d3.interpolateNumber(d.previousValue || 0, d.percentage);
+
+      return function (t) {
+        const percentage = Math.min(d.percentage, d.percentage * t);
+        d.percentage = i(t);
+        const newArc = { ...d, percentage };
+        return arc(newArc);
+      };
+    }
   }
 
   render() {
